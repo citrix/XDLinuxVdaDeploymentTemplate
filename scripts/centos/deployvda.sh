@@ -47,10 +47,10 @@ lvda_pkg_name=$(echo $lvda_pkg_url | sed -e "s#.*/\(.*\)\s*#\1#")
 xdping_pkg_url="https://github.com/jiz-citrix/LVDASoftware/releases/download/v0.1.0/linux-xdping.gz"
 xdping_pkg_name=$(echo $xdping_pkg_url | sed -e "s#.*/\(.*\)\s*#\1#")
 
-mcs_sysd_unit_file_url="https://raw.githubusercontent.com/jiz-citrix/XDLinuxVDA/master/scripts/centos/ad_join.service"
+mcs_sysd_unit_file_url="https://raw.githubusercontent.com/citrix/XDLinuxVdaDeploymentTemplate/master/scripts/centos/ad_join.service"
 mcs_sysd_unit_file=$(echo $mcs_sysd_unit_file_url | sed -e "s#.*/\(.*\)\s*#\1#")
 
-mcs_boot_script_url="https://raw.githubusercontent.com/jiz-citrix/XDLinuxVDA/master/scripts/centos/winbind_ad_join.sh"
+mcs_boot_script_url="https://raw.githubusercontent.com/citrix/XDLinuxVdaDeploymentTemplate/master/scripts/centos/winbind_ad_join.sh"
 mcs_boot_script=$(echo $mcs_boot_script_url | sed -e "s#.*/\(.*\)\s*#\1#")
 
 vhci_hcd_version=1.15

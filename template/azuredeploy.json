@@ -220,7 +220,7 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "fileUris": [ "https://raw.githubusercontent.com/jiz-citrix/XDLinuxVDA/master/scripts/centos/deployvda.sh" ],
+              "fileUris": [ "https://raw.githubusercontent.com/citrix/XDLinuxVdaDeploymentTemplate/master/scripts/centos/deployvda.sh" ],
               "commandToExecute": "bash deployvda.sh"
             }
           }
