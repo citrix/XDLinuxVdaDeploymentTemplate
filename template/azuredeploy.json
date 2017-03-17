@@ -1,0 +1,257 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "administratorUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "Username for the Linux VM"
+        }
+      },
+      "administratorPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "User password for the Linux VM"
+        }
+      },
+      "virtualMachineName": {
+        "type": "string",
+        "minLength": 4,
+        "metadata": {
+          "description": "Name for the Linux VM"
+        }
+      },
+      "virtualMachineSize": {
+        "type": "string",
+        "defaultValue": "Standard_D2_v2",
+        "allowedValues": [
+          "Standard_A2",
+          "Standard_A3",
+          "Standard_A4",
+          "Standard_A5",
+          "Standard_A6",
+          "Standard_A7",
+          "Standard_A8",
+          "Standard_A9",
+          "Standard_A10",
+          "Standard_A11",
+          "Standard_D2",
+          "Standard_D3",
+          "Standard_D4",
+          "Standard_D11",
+          "Standard_D12",
+          "Standard_D13",
+          "Standard_D14",
+          "Standard_D1_v2",
+          "Standard_D2_v2",
+          "Standard_D3_v2",
+          "Standard_D4_v2",
+          "Standard_D5_v2"
+        ],
+        "metadata": {
+          "description": "Instance size for the Linux VM"
+        }
+      }
+    },
+  "variables": {
+    "suffix": "[take(uniqueString(subscription().subscriptionId, resourceGroup().id), 7)]",
+    "imagePublisher": "OpenLogic",
+    "imageOffer": "CentOS",
+    "OSVersion": "7.2",
+    "OSDiskName": "[concat(variables('vmName'), '_osdisk_', variables('suffix'))]",
+    "nicName": "[concat(variables('vmName'), '_nic1_', variables('suffix'))]",
+    "addressPrefix": "10.0.0.0/16",
+    "subnetName": "Subnet",
+    "subnetPrefix": "10.0.0.0/24",
+    "vhdStorageType": "Standard_LRS",
+    "publicIPAddressName": "[concat(variables('vmName'), '_pip_', variables('suffix'))]",
+    "publicIPAddressType": "Dynamic",
+    "vhdStorageContainerName": "vhds",
+    "vmName": "[replace(parameters('virtualMachineName'), '_', '-')]",
+    "vmSize": "[parameters('virtualMachineSize')]",
+    "virtualNetworkName": "MyVNET",
+    "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetId'), '/subnets/', variables('subnetName'))]",
+    "vhdStorageName": "[concat('vhdstorage', variables('suffix'))]",
+    "dnsLabelPrefix": "[toLower(concat('xd-', variables('vmName'), '-', variables('suffix')))]",
+    "vmExtensionName": "[concat(variables('vmName'), '/CustomScript')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('vhdStorageName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "StorageAccount"
+      },
+      "properties": {
+        "accountType": "[variables('vhdStorageType')]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "PublicIPAddress"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('dnsLabelPrefix')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualNetwork"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "NetworkInterface"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualMachine"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('vhdStorageName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('administratorUsername')]",
+          "adminPassword": "[parameters('administratorPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('OSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('https://', variables('vhdStorageName'), '.blob.core.windows.net/', variables('vhdStorageContainerName'), '/', variables('OSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[variables('vmExtensionName')]",
+          "apiVersion": "2015-06-15",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+          ],
+          "tags": {
+            "displayName": "Linux VDA deployment"
+          },
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "typeHandlerVersion": "2.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [ "https://raw.githubusercontent.com/jiz-citrix/XDLinuxVDA/master/scripts/centos/deployvda.sh" ],
+              "commandToExecute": "bash deployvda.sh"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "resourceGroupName": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('vhdStorageName')]"
+    },
+    "storageContainerName": {
+      "type": "string",
+      "value": "[variables('vhdStorageContainerName')]"
+    },
+    "vhdBlobName": {
+      "type": "string",
+      "value": "[concat(variables('OSDiskName'), '.vhd')]"
+    },
+    "vmDomainName": {
+      "type": "string",
+      "value": "[concat(variables('dnsLabelPrefix'), '.', resourceGroup().location, '.cloudapp.azure.com')]"
+    },
+    "vmName": {
+      "type": "string",
+      "value": "[variables('vmName')]"
+    } 
+  }
+}

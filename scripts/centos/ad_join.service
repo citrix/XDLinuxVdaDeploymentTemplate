@@ -1,0 +1,13 @@
+[Unit]
+Description=AD Join
+ConditionFileIsExecutable=/usr/lib/mcs/winbind_ad_join.sh
+After=winbind.service,chronyd.service,ctxhdx.service,ctxvda.service
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/mcs/winbind_ad_join.sh
+RemainAfterExit=yes
+User=root
+
+[Install]
+WantedBy=multi-user.target
