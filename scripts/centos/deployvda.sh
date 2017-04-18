@@ -41,7 +41,7 @@ pkg_mcs=("epel-release"\
 pkg_mcs_num=${#pkg_mcs[@]}
 
 
-lvda_pkg_url="https://github.com/jiz-citrix/LVDASoftware/releases/download/v0.1.0/XenDesktopVDA-7.12.0.375-1.el7_2.x86_64.rpm"
+lvda_pkg_url="https://github.com/jiz-citrix/LVDASoftware/releases/download/v0.1.0/XenDesktopVDA-7.13.0.382-1.el7_2.x86_64.rpm"
 lvda_pkg_name=$(echo $lvda_pkg_url | sed -e "s#.*/\(.*\)\s*#\1#")
 
 xdping_pkg_url="https://github.com/jiz-citrix/LVDASoftware/releases/download/v0.1.0/linux-xdping.gz"
